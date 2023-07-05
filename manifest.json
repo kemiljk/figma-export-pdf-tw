@@ -1,8 +1,13 @@
 {
-  "name": "Figma Plugin Tailwind Starter",
-  "id": "",
+  "name": "Doc››exporter",
+  "id": "1258350192017393097",
   "api": "1.0.0",
   "main": "dist/code.js",
   "ui": "dist/ui.html",
-  "editorType": ["figma", "figjam"]
+  "relaunchButtons": [{ "command": "relaunch", "name": "Run again", "multipleSelection": false }],
+  "networkAccess": {
+    "allowedDomains": ["none"]
+  },
+  "editorType": ["figma", "dev"],
+  "capabilities": ["inspect"]
 }
