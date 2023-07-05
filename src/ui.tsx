@@ -20,6 +20,9 @@ function App() {
 
     if (msgType === 'pageCount') {
       setPageCount(msg.data);
+      if (msg.data === 0) {
+        setImageData(null);
+      }
     }
 
     if (msgType === 'exportPDF') {
@@ -63,7 +66,7 @@ function App() {
       )}
       <p className='text-xs text-figma-secondary'>{pageCount} pages</p>
       <Input label='title' text='PDF title' onChange={handleTitleChange} value={title} icon={false} disabled={false} placeholder='Enter a PDF title' />
-      <button className='w-full cursor-default rounded-md bg-figma-blue py-3 text-xs font-semibold text-figma-onBrand hover:bg-figma-blue-hover' id='export' onClick={handleExportPDF}>
+      <button className='w-full cursor-default rounded-md bg-figma-blue py-3 text-xs font-semibold text-figma-onBrand hover:bg-figma-blue-hover disabled:opacity-50 disabled:cursor-not-allowed' id='export' onClick={handleExportPDF} disabled={pageCount === 0 ? true : false}>
         Export PDF
       </button>
     </main>
