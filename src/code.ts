@@ -1,4 +1,4 @@
-figma.showUI(__html__, { themeColors: true, height: 400 });
+figma.showUI(__html__, { themeColors: true, height: 464 });
 
 const { selection } = figma.currentPage;
 
@@ -48,15 +48,41 @@ figma.ui.onmessage = async (msg) => {
 
   if (msg.type === 'EXPORT') {
     const nodes = figma.currentPage.selection;
-    const textNodes = figma.root.findAll((child) => child.type === 'TEXT') as TextNode[];
-    for (let textNode of textNodes) {
-      await figma.loadFontAsync((textNode as TextNode).fontName as FontName);
-    }
+    // const textNodes = figma.currentPage.findAll((child) => child.type === 'TEXT') as TextNode[];
+    // if (textNodes.length > 0) {
+    //   for (let textNode of textNodes) {
+    //     await figma.loadFontAsync((textNode as TextNode).fontName as FontName);
+    //   }
+    // }
 
     if (!hasValidSelection(nodes)) return Promise.resolve('No valid selection');
 
+    let sortedNodes: SceneNode[];
+    switch (msg.order) {
+      case 'canvas':
+        sortedNodes = [...nodes].sort((a, b) => {
+          const yDiff = a.y - b.y;
+          if (yDiff !== 0) return yDiff;
+          return a.x - b.x;
+        });
+
+        break;
+      case 'number':
+        sortedNodes = [...nodes].sort((a, b) => {
+          const aNumber = a.name.match(/\d+/g) ? parseInt(a.name.match(/\d+/g)[0], 10) : 0;
+          const bNumber = b.name.match(/\d+/g) ? parseInt(b.name.match(/\d+/g)[0], 10) : 0;
+          return aNumber - bNumber;
+        });
+        break;
+      default:
+        // Default to 'Creation date'
+        sortedNodes = [...nodes];
+        break;
+    }
+
     const exportArray = [];
-    for (let node of nodes) {
+    for (let node of sortedNodes) {
+    // for (let node of nodes) {
       try {
         const bytes = await node.exportAsync({
           format: 'PDF',
@@ -68,7 +94,8 @@ figma.ui.onmessage = async (msg) => {
       }
     }
 
-    set(nodes);
+    set(sortedNodes);
+    // set(nodes);
     sendToUi(exportArray);
     figma.root.setRelaunchData({ relaunch: '' });
   }

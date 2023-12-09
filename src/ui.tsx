@@ -1,13 +1,16 @@
+import './ui.css';
 import * as React from 'react';
 import { createRoot } from 'react-dom/client';
 import { PDFDocument } from 'pdf-lib';
 import Input from './components/Input';
-import './ui.css';
+import SelectInput from './components/Select';
 
 function App() {
   const [imageData, setImageData] = React.useState(null);
   const [pageCount, setPageCount] = React.useState(0);
   const [title, setTitle] = React.useState('Exported PDF');
+  const [orderType, setOrderType] = React.useState("creation");
+
 
   window.onmessage = async (event: MessageEvent) => {
     const msgType = event.data.pluginMessage.type;
@@ -27,7 +30,7 @@ function App() {
 
     if (msgType === 'exportPDF') {
       const pdfDoc = await PDFDocument.create();
-      for (const item of msg.data) {
+      for (const item of msg.data.slice()) {
         const bytes = new Uint8Array(item);
         const itemPdf = await PDFDocument.load(bytes);
         const copiedPages = await pdfDoc.copyPages(itemPdf, itemPdf.getPageIndices());
@@ -46,13 +49,19 @@ function App() {
   };
 
   const handleExportPDF = () => {
-    parent.postMessage({ pluginMessage: { type: 'EXPORT' } }, '*');
+    parent.postMessage({ pluginMessage: { type: 'EXPORT', order: orderType } }, '*');
   };
 
   const handleTitleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     let title = event.target.value;
     setTitle(title);
     parent.postMessage({ pluginMessage: { type: 'setTitle', data: title } }, '*');
+  };
+
+  const handleOrderChange = (value?: string) => {
+    if (value) {
+      setOrderType(value);
+    }
   };
 
   return (
@@ -64,7 +73,8 @@ function App() {
           <p className='text-xs text-figma-secondary'>Select one or more Frames to export</p>
         </div>
       )}
-      <p className='text-xs text-figma-secondary'>{pageCount} pages</p>
+      <p className='text-xs text-figma-secondary'>{pageCount} {pageCount === 1 ? 'page' : 'pages'}</p>
+      <SelectInput onChange={handleOrderChange} />
       <Input label='title' text='PDF title' onChange={handleTitleChange} value={title} icon={false} disabled={false} placeholder='Enter a PDF title' />
       <button className='w-full cursor-default rounded-md bg-figma-blue py-3 text-xs font-semibold text-figma-onBrand hover:bg-figma-blue-hover disabled:opacity-50 disabled:cursor-not-allowed' id='export' onClick={handleExportPDF} disabled={pageCount === 0 ? true : false}>
         Export PDF
